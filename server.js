@@ -5,42 +5,57 @@ require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend
-app.use(express.static(__dirname));
+app.use(express.static("public"));
 
 // Supabase connection
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY
 );
 
-// GET all feedback
-app.get("/feedback", async (req, res) => {
-  const { data, error } = await supabase
-    .from("feedback")
-    .select("*")
-    .order("id", { ascending: false });
+// Serve frontend
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/public/index.html");
+});
 
-  if (error) return res.json({ error });
-  res.json(data);
+// GET feedback
+app.get("/feedback", async (req, res) => {
+    const { data, error } = await supabase
+        .from("feedback")
+        .select("*")
+        .order("id", { ascending: false });
+
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    res.json(data);
 });
 
 // POST feedback
 app.post("/feedback", async (req, res) => {
-  const { name, message } = req.body;
+    const { name, message } = req.body;
 
-  const { data, error } = await supabase
-    .from("feedback")
-    .insert([{ name, message }]);
+    if (!name || !message) {
+        return res.status(400).json({ error: "Name and message required" });
+    }
 
-  if (error) return res.json({ error });
+    const { data, error } = await supabase
+        .from("feedback")
+        .insert([{ name, message }]);
 
-  res.json({ success: true, data });
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ success: true });
 });
 
-app.listen(process.env.PORT, () => {
-  console.log("Server running on http://localhost:" + process.env.PORT);
+// Start server
+app.listen(process.env.PORT || 3000, () => {
+    console.log("Server running on http://localhost:3000");
 });
