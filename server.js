@@ -9,7 +9,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+
+// Serve frontend (index.html in same folder)
+app.use(express.static(__dirname));
 
 // Supabase connection
 const supabase = createClient(
@@ -17,45 +19,55 @@ const supabase = createClient(
     process.env.SUPABASE_KEY
 );
 
-// Serve frontend
+// Home route
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/public/index.html");
+    res.sendFile(__dirname + "/index.html");
 });
 
-// GET feedback
+// GET all feedback
 app.get("/feedback", async (req, res) => {
-    const { data, error } = await supabase
-        .from("feedback")
-        .select("*")
-        .order("id", { ascending: false });
+    try {
+        const { data, error } = await supabase
+            .from("feedback")
+            .select("*")
+            .order("id", { ascending: false });
 
-    if (error) {
-        return res.status(500).json({ error: error.message });
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    res.json(data);
 });
 
-// POST feedback
+// POST new feedback
 app.post("/feedback", async (req, res) => {
-    const { name, message } = req.body;
+    try {
+        const { name, message } = req.body;
 
-    if (!name || !message) {
-        return res.status(400).json({ error: "Name and message required" });
+        if (!name || !message) {
+            return res.status(400).json({ error: "Name and message required" });
+        }
+
+        const { data, error } = await supabase
+            .from("feedback")
+            .insert([{ name, message }]);
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    const { data, error } = await supabase
-        .from("feedback")
-        .insert([{ name, message }]);
-
-    if (error) {
-        return res.status(500).json({ error: error.message });
-    }
-
-    res.json({ success: true });
 });
 
 // Start server
-app.listen(process.env.PORT || 3000, () => {
-    console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
