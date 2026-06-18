@@ -1,33 +1,34 @@
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_KEY
-  );
 
-  // GET
-  if (req.method === "GET") {
-    const { data, error } = await supabase
-      .from("feedback")
-      .select("*")
-      .order("id", { ascending: false });
+    const supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_KEY
+    );
 
-    if (error) return res.status(500).json(error);
+    // GET
+    if (req.method === "GET") {
+        const { data, error } = await supabase
+            .from("feedback")
+            .select("*")
+            .order("id", { ascending: false });
 
-    return res.status(200).json(data);
-  }
+        if (error) return res.status(500).json(error);
 
-  // POST
-  if (req.method === "POST") {
-    const { name, message } = req.body;
+        return res.status(200).json(data);
+    }
 
-    const { error } = await supabase
-      .from("feedback")
-      .insert([{ name, message }]);
+    // POST
+    if (req.method === "POST") {
+        const { name, message } = req.body;
 
-    if (error) return res.status(500).json(error);
+        const { error } = await supabase
+            .from("feedback")
+            .insert([{ name, message }]);
 
-    return res.status(200).json({ success: true });
-  }
+        if (error) return res.status(500).json(error);
+
+        return res.status(200).json({ success: true });
+    }
 }
