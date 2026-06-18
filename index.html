@@ -20,8 +20,7 @@
             box-shadow: 0 0 10px gray;
         }
 
-        input,
-        textarea {
+        input, textarea {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
@@ -44,55 +43,60 @@
 
 <body>
 
-    <div class="box">
-        <h2>Feedback System</h2>
+<div class="box">
+    <h2>Feedback System</h2>
 
-        <input id="name" placeholder="Enter Name">
-        <textarea id="message" placeholder="Enter Message"></textarea>
+    <input id="name" placeholder="Enter Name">
+    <textarea id="message" placeholder="Enter Message"></textarea>
 
-        <button onclick="send()">Submit</button>
+    <button onclick="send()">Submit</button>
 
-        <div id="list"></div>
-    </div>
+    <div id="list"></div>
+</div>
 
-    <script>
-        async function load() {
-            let res = await fetch("/feedback");
-            let data = await res.json();
+<script>
 
-            let html = "<h3>Messages</h3>";
+async function load() {
+    try {
+        let res = await fetch("/api/feedback");
+        let data = await res.json();
 
-            data.forEach(item => {
-                html += `<p><b>${item.name}</b>: ${item.message}</p>`;
-            });
+        let html = "<h3>Messages</h3>";
 
-            document.getElementById("list").innerHTML = html;
-        }
+        data.forEach(item => {
+            html += `<p><b>${item.name}</b>: ${item.message}</p>`;
+        });
 
-        async function send() {
-            let name = document.getElementById("name").value;
-            let message = document.getElementById("message").value;
+        document.getElementById("list").innerHTML = html;
+    } catch (err) {
+        console.log("Load error:", err);
+    }
+}
 
-            if (!name || !message) {
-                alert("Fill all fields");
-                return;
-            }
+async function send() {
+    let name = document.getElementById("name").value;
+    let message = document.getElementById("message").value;
 
-            await fetch("/feedback", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, message })
-            });
+    if (!name || !message) {
+        alert("Fill all fields");
+        return;
+    }
 
-            document.getElementById("name").value = "";
-            document.getElementById("message").value = "";
+    await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, message })
+    });
 
-            load();
-        }
+    document.getElementById("name").value = "";
+    document.getElementById("message").value = "";
 
-        load();
-    </script>
+    load();
+}
+
+load();
+
+</script>
 
 </body>
-
 </html>
